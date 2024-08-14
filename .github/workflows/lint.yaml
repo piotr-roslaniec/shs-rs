@@ -1,16 +1,13 @@
-name: lint
+name: Lint
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
   push:
-    branches: [main]
 
 jobs:
   fmt:
     name: fmt
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -26,12 +23,11 @@ jobs:
   clippy:
     name: clippy
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: nightly-2024-06-10
           components: clippy
@@ -41,7 +37,7 @@ jobs:
 
   udeps:
     name: udeps
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -50,8 +46,28 @@ jobs:
         with:
           toolchain: nightly-2024-06-10
 
-      - name: install udeps
+      - name: Install udeps
         run: cargo install --git https://github.com/est31/cargo-udeps --locked
 
       - name: cargo udeps
         run: cargo udeps
+
+  taplo:
+    name: taplo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2024-06-10
+          components: clippy
+
+      - name: Install taplo
+        uses: baptiste0928/cargo-install@v3
+        with:
+          crate: taplo-cli
+
+      - name: taplo fmt
+        run: taplo fmt --check
