@@ -1,0 +1,15 @@
+
+running 5 benches
+bench block_boundary        seeded with 0x00000000deadbeef
+bench block_boundary        ... : n == +0.036M, max t = -15.06256, max tau = -0.07888, (5/tau)^2 = 4017
+bench length_extremes       seeded with 0x00000000deadbeef
+bench length_extremes       ... : n == +0.024M, max t = -3824.10496, max tau = -24.81877, (5/tau)^2 = 0
+bench multiple_blocks       seeded with 0x00000000deadbeef
+bench multiple_blocks       ... : n == +0.039M, max t = -83.39395, max tau = -0.42278, (5/tau)^2 = 139
+bench padding_extremes      seeded with 0x00000000deadbeef
+bench padding_extremes      ... : n == +0.017M, max t = -908.80894, max tau = -6.97373, (5/tau)^2 = 0
+bench single_bit_difference seeded with 0x00000000deadbeef
+bench single_bit_difference ... : n == +0.005M, max t = +7.17075, max tau = +0.10041, (5/tau)^2 = 2479
+
+dudect benches complete
+
