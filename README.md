@@ -4,7 +4,7 @@ An educational implementation of Secure Hash Standard in Rust.
 
 Based on [FIPS PUB 180-4](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf). Currently only implements SHA256.
 
-Please don't use this code in production, and so on.
+Please don`t use this code in production, and so on.
 
 ## Test vectors
 
@@ -55,6 +55,28 @@ In order to run CT benchmarks for all compilation targets in debug and release m
 ```bash
 bash ./scripts/run_ct_benches.bash 
 ```
+
+### Evaluating CT benchmarks
+
+General information:
+
+- `n` is the number of measurements (in millions)
+- `t` is the t-statistic
+- `tau` is a normalized t-statistic
+- `(5/tau)^2` is an estimate of how many measurements would be needed to detect a timing leak if one exists
+
+Interpreting tau and t-statistic:
+
+- Smaller absolute values of tau and t are better
+- Values close to zero suggest more constant-time behavior
+- Larger absolute values suggest potential timing differences
+
+Interpreting `(5/tau)^2`:
+
+- Larger values are better
+- A value of 0 suggests a significant timing difference was detected
+- Very large values suggest it would take many measurements to detect a timing difference, implying more
+  constant-time behavior
 
 # License
 
