@@ -56,27 +56,40 @@ In order to run CT benchmarks for all compilation targets in debug and release m
 bash ./scripts/run_ct_benches.bash 
 ```
 
-### Evaluating CT benchmarks
+## Evaluating CT benchmarks
 
-General information:
+Example output:
+
+```
+bench block_boundary        ... : n == +0.031M, max t = +38.06145, max tau = +0.21517, (5/tau)^2 = 539
+```
+
+### General information:
 
 - `n` is the number of measurements (in millions)
 - `t` is the t-statistic
 - `tau` is a normalized t-statistic
 - `(5/tau)^2` is an estimate of how many measurements would be needed to detect a timing leak if one exists
 
-Interpreting tau and t-statistic:
+### Max Tau (τ)
 
-- Smaller absolute values of tau and t are better
-- Values close to zero suggest more constant-time behavior
-- Larger absolute values suggest potential timing differences
+Tau (τ) is a normalized t-statistic that measures the timing difference between two classes of inputs.
 
-Interpreting `(5/tau)^2`:
+#### Guidelines:
 
-- Larger values are better
-- A value of 0 suggests a significant timing difference was detected
-- Very large values suggest it would take many measurements to detect a timing difference, implying more
-  constant-time behavior
+- Aim for |τ| as close to 0 as possible
+- |τ| < 1 is generally considered good
+- Any |τ| > 5 should be treated as a significant concern
+
+### (5/tau)^2
+
+This metric estimates the number of measurements needed to detect a timing leak with high confidence.
+
+#### Guidelines:
+
+- Aim for (5/tau)^2 > 10^6 for critical operations
+- Any value < 10^4 should be investigated
+- A value of 0 or very close to 0 indicates a severe timing leak
 
 # License
 
