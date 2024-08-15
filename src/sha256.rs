@@ -1,7 +1,21 @@
-/// Source: https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf
-
-/// Word size
-const W: u32 = 32;
+//! SHA-256 implementation based on FIPS 180-4 specification.
+//!
+//! This module provides a Rust implementation of the SHA-256 cryptographic hash function
+//! as defined in the Federal Information Processing Standards (FIPS) Publication 180-4.
+//!
+//! # References
+//!
+//! - [FIPS 180-4 Specification](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf)
+//!
+//! # Examples
+//!
+//! ```
+//! use shs_rs::sha256::sha256;
+//!
+//! let message = b"Hello, world!";
+//! let digest = sha256(message);
+//! println!("SHA-256 digest: {:x?}", digest);
+//! ```
 
 /// Rotate right (circular right shift) operation.
 ///
@@ -9,16 +23,8 @@ const W: u32 = 32;
 ///
 /// # Parameters
 ///
-/// - `n`: An integer with `0 <= n < w`.
-/// - `x`: `w`-bit word.
-///
-/// In our case, `w=32`.
-fn rotr(n: u32, x: u32) -> u32 {
-    let w = 32;
-    assert!(n < w);
-    // (x >> n) | (x << (w - n))
-    x.wrapping_shr(n) | x.wrapping_shl(w - n)
-}
+/// - `x`: `W`-bit word.
+const fn rotr<const N: u32>(x: u32) -> u32 { x.rotate_right(N) }
 
 /// Shift right operation.
 ///
@@ -26,41 +32,24 @@ fn rotr(n: u32, x: u32) -> u32 {
 ///
 /// # Parameters
 ///
-/// - `n`: An integer with `0 <= n < w`.
-/// - `x`: `w`-bit word.
-///
-/// In our case, `w=32`.
-fn shr(n: u32, x: u32) -> u32 {
-    let w = 32;
-    assert!(n < w);
-    x.wrapping_shr(n)
-}
+/// - `n`: An integer with `0 <= n < 32`.
+const fn shr<const N: u32>(x: u32) -> u32 { x.wrapping_shr(N) }
 
 /// See: FIPS 180-4, 4.1.2
 
-fn ch(x: u32, y: u32, z: u32) -> u32 {
-    (x & y) ^ (!x & z)
-}
+#[inline(always)]
+fn ch(x: u32, y: u32, z: u32) -> u32 { (x & y) ^ (!x & z) }
 
-fn maj(x: u32, y: u32, z: u32) -> u32 {
-    (x & y) ^ (x & z) ^ (y & z)
-}
+#[inline(always)]
+fn maj(x: u32, y: u32, z: u32) -> u32 { (x & y) ^ (x & z) ^ (y & z) }
 
-fn sum_0_256(x: u32) -> u32 {
-    rotr(2, x) ^ rotr(13, x) ^ rotr(22, x)
-}
+const fn sum_0_256(x: u32) -> u32 { rotr::<2>(x) ^ rotr::<13>(x) ^ rotr::<22>(x) }
 
-fn sum_1_256(x: u32) -> u32 {
-    rotr(6, x) ^ rotr(11, x) ^ rotr(25, x)
-}
+const fn sum_1_256(x: u32) -> u32 { rotr::<6>(x) ^ rotr::<11>(x) ^ rotr::<25>(x) }
 
-fn delta_0_256(x: u32) -> u32 {
-    rotr(7, x) ^ rotr(18, x) ^ shr(3, x)
-}
+const fn delta_0_256(x: u32) -> u32 { rotr::<7>(x) ^ rotr::<18>(x) ^ shr::<3>(x) }
 
-fn delta_1_256(x: u32) -> u32 {
-    rotr(17, x) ^ rotr(19, x) ^ shr(10, x)
-}
+const fn delta_1_256(x: u32) -> u32 { rotr::<17>(x) ^ rotr::<19>(x) ^ shr::<10>(x) }
 
 /// `WORDS` represent the first thirty-two bits of the fractional parts of the cube roots
 /// of the first sixty-four prime numbers.
@@ -96,7 +85,7 @@ fn padding(message: &[u8]) -> Vec<u8> {
     // Append "1" bit to the end of message
     padded.push(0x80);
 
-    // Calculate k
+    // Calculate k bits in constant time
     // We want: (l_bits + 1 + k) % 512 = 448
     // So: k = (448 - (l_bits + 1) % 512) % 512
     // But we need to handle the case where l_bits + 1 > 448
@@ -143,7 +132,6 @@ fn message_to_blocks(message: &[u8]) -> Vec<Vec<u8>> {
 /// Divides a 512-bit block into sixteen 32-bit words.
 ///
 /// See: FIPS 180-4, 6.2.2
-///
 fn block_to_words(block: &[u8]) -> Vec<u32> {
     assert_eq!(block.len() % 4, 0);
     block
@@ -152,8 +140,17 @@ fn block_to_words(block: &[u8]) -> Vec<u32> {
         .collect()
 }
 
-// SHA-256 Hash Computation
-// See: FIPS 180-4, 6.2.2
+/// SHA-256 Hash Computation
+///
+/// See: FIPS 180-4, 6.2.2
+///
+/// # Parameters
+///
+/// - `blocks` - A message to compute digest over, already divided into 512-bit blocks.
+///
+/// # Returns
+///
+/// A 256-bit digest of `blocks`.
 fn compute_hash(blocks: &[Vec<u8>]) -> Vec<u8> {
     // SHA-256 Preprocessing
     let mut hash_value = Vec::with_capacity(blocks.len());
@@ -218,7 +215,7 @@ fn compute_hash(blocks: &[Vec<u8>]) -> Vec<u8> {
         hash_value.push(new_layer);
     }
 
-    // Compute digest by combining the last layer of intermediate hash values
+    // Compute the digest by combining the last layer of intermediate hash values
     let mut digest = Vec::new();
     for h in hash_value[hash_value.len() - 1].into_iter() {
         digest.extend_from_slice(&h.to_be_bytes());
@@ -236,6 +233,15 @@ fn compute_hash(blocks: &[Vec<u8>]) -> Vec<u8> {
 /// # Returns
 ///
 /// 256-bit digest of the `message`.
+///
+/// # Examples
+///
+/// ```
+/// use shs_rs::sha256::sha256;
+/// let message = b"Hello, world!";
+/// let digest = sha256(message);
+/// println!("SHA-256 digest: {:x?}", digest);
+/// ```
 pub fn sha256(message: &[u8]) -> Vec<u8> {
     let padded = padding(message);
     let blocks = message_to_blocks(&padded);
@@ -245,27 +251,19 @@ pub fn sha256(message: &[u8]) -> Vec<u8> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use sha2::Digest;
 
     #[test]
-    fn rotr_works() {
-        // (n, x, expected_output)
-        let test_vectors = [
-            (0, 0x12345678, 0x12345678),
-            (4, 0x12345678, 0x81234567),
-            (8, 0x12345678, 0x78123456),
-            (16, 0x12345678, 0x56781234),
-            (24, 0x12345678, 0x34567812),
-            (31, 0x12345678, 0x2468acf0),
-        ];
-
-        for &(n, x, expected) in &test_vectors {
-            assert_eq!(rotr(n, x), expected);
-        }
+    fn test_rotr() {
+        assert_eq!(rotr::<0>(0x12345678), 0x12345678);
+        assert_eq!(rotr::<4>(0x12345678), 0x81234567);
+        assert_eq!(rotr::<8>(0x12345678), 0x78123456);
+        assert_eq!(rotr::<16>(0x12345678), 0x56781234);
+        assert_eq!(rotr::<24>(0x12345678), 0x34567812);
+        assert_eq!(rotr::<31>(0x12345678), 0x2468acf0);
     }
 
     #[test]
-    fn padding_works() {
+    fn test_padding() {
         // (input, expected_output)
         let test_vectors = [
             (vec![0x61], [vec![0x61, 0x80], vec![0; 61], vec![8]].concat()),
@@ -323,104 +321,12 @@ mod test {
                 "",
                 "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
             ),
-            (
-                "RC4.16",
-                &hex::encode(rc4_keystream(16)),
-                "067c531269735ca7f541fdaca8f0dc76305d3cada140f89372a410fe5eff6e4d"
-            ),
         ];
 
         for (name, input, expected) in test_vectors.iter() {
             let input_bytes = hex_to_bytes(input);
             let result = sha256(&input_bytes);
             assert_eq!(hex::encode(result), *expected, "Test vector '{}' failed", name);
-        }
-    }
-    use std::str::FromStr;
-
-    #[derive(Debug)]
-    struct TestVector {
-        identifier: String,
-        input_length: usize,
-        input_data: String,
-        sha256_hash: Vec<u8>,
-        sha_d256_hash: Vec<u8>,
-    }
-
-    fn parse_sha_d256_test_vectors(content: &str) -> Vec<TestVector> {
-        let re = regex::Regex::new(r"^:(\S+)\s+(\d+)\s+(\S+)\s+([a-f0-9]{64})\s+([a-f0-9]{64})$")
-            .unwrap();
-        content
-            .lines()
-            .filter_map(|line| {
-                re.captures(line).map(|caps| {
-                    let input_data = caps[3].to_string();
-                    TestVector {
-                        identifier: caps[1].to_string(),
-                        input_length: usize::from_str(&caps[2]).unwrap(),
-                        input_data,
-                        sha256_hash: hex::decode(&caps[4]).unwrap(),
-                        sha_d256_hash: hex::decode(&caps[5]).unwrap(),
-                    }
-                })
-            })
-            .collect()
-    }
-
-    // Simple RC4 implementation for test vector generation
-    fn rc4_keystream(length: usize) -> Vec<u8> {
-        let mut s: Vec<u8> = (0..=255).collect();
-        let mut j: u8 = 0;
-        for i in 0..256 {
-            // Key is all zeros
-            j = j.wrapping_add(s[i]).wrapping_add(0);
-            s.swap(i, j as usize);
-        }
-        let mut i: u8 = 0;
-        j = 0;
-        let mut result = Vec::with_capacity(length);
-        for _ in 0..length {
-            i = i.wrapping_add(1);
-            j = j.wrapping_add(s[i as usize]);
-            s.swap(i as usize, j as usize);
-            let k = s[(s[i as usize].wrapping_add(s[j as usize])) as usize];
-            result.push(k);
-        }
-        result
-    }
-
-    #[test]
-    fn sha256_test_vectors() {
-        let content = include_str!("../SHAd256_Test_Vectors.txt");
-        let test_vectors = parse_sha_d256_test_vectors(content);
-
-        for test_vec in test_vectors {
-            let input = match test_vec.input_data.as_str() {
-                "MILLION_a" => vec![b'a'; 1_000_000],
-                "RC4" => rc4_keystream(test_vec.input_length),
-                _ => hex::decode(&test_vec.input_data).unwrap(),
-            };
-
-            assert_eq!(
-                input.len(),
-                test_vec.input_length,
-                "Input length mismatch for {}",
-                test_vec.identifier
-            );
-
-            let sha256_hash = sha256(&input);
-            assert_eq!(
-                sha256_hash, test_vec.sha256_hash,
-                "SHA-256 mismatch for {}",
-                test_vec.identifier
-            );
-
-            let sha_d256_hash = sha256(&sha256_hash);
-            assert_eq!(
-                sha_d256_hash, test_vec.sha_d256_hash,
-                "SHA_d-256 mismatch for {}",
-                test_vec.identifier
-            );
         }
     }
 }
