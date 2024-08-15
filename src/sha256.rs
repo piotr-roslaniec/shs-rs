@@ -163,11 +163,10 @@ fn block_to_words(block: &[u8]) -> Vec<u32> {
 /// A 256-bit digest of `blocks`.
 fn compute_hash(blocks: &[Vec<u8>]) -> Vec<u8> {
     // SHA-256 Preprocessing
-    let mut hash_value = Vec::with_capacity(blocks.len());
-    hash_value.push(IHV);
+    let mut hash_value = IHV;
 
     // Process every message block M_i
-    for (index_i, block_m_i) in blocks.iter().enumerate() {
+    for block_m_i in blocks.iter() {
         // Prepare message schedule
         // First 16 words
         let mut message_schedule_w = block_to_words(block_m_i);
@@ -180,16 +179,17 @@ fn compute_hash(blocks: &[Vec<u8>]) -> Vec<u8> {
             message_schedule_w.push(w_t);
         }
         assert_eq!(message_schedule_w.len(), 64);
+
         // Hash computation
         let (mut a, mut b, mut c, mut d, mut e, mut f, mut g, mut h) = (
-            hash_value[index_i][0],
-            hash_value[index_i][1],
-            hash_value[index_i][2],
-            hash_value[index_i][3],
-            hash_value[index_i][4],
-            hash_value[index_i][5],
-            hash_value[index_i][6],
-            hash_value[index_i][7],
+            hash_value[0],
+            hash_value[1],
+            hash_value[2],
+            hash_value[3],
+            hash_value[4],
+            hash_value[5],
+            hash_value[6],
+            hash_value[7],
         );
 
         let mut temp_1;
@@ -212,26 +212,18 @@ fn compute_hash(blocks: &[Vec<u8>]) -> Vec<u8> {
         }
 
         // Compute intermediate hash values
-        let new_layer = [
-            a.wrapping_add(hash_value[index_i][0]),
-            b.wrapping_add(hash_value[index_i][1]),
-            c.wrapping_add(hash_value[index_i][2]),
-            d.wrapping_add(hash_value[index_i][3]),
-            e.wrapping_add(hash_value[index_i][4]),
-            f.wrapping_add(hash_value[index_i][5]),
-            g.wrapping_add(hash_value[index_i][6]),
-            h.wrapping_add(hash_value[index_i][7]),
-        ];
-        hash_value.push(new_layer);
+        hash_value[0] = hash_value[0].wrapping_add(a);
+        hash_value[1] = hash_value[1].wrapping_add(b);
+        hash_value[2] = hash_value[2].wrapping_add(c);
+        hash_value[3] = hash_value[3].wrapping_add(d);
+        hash_value[4] = hash_value[4].wrapping_add(e);
+        hash_value[5] = hash_value[5].wrapping_add(f);
+        hash_value[6] = hash_value[6].wrapping_add(g);
+        hash_value[7] = hash_value[7].wrapping_add(h);
     }
 
-    // Compute the digest by combining the last layer of intermediate hash values
-    let mut digest = Vec::new();
-    for h in hash_value[hash_value.len() - 1].into_iter() {
-        digest.extend_from_slice(&h.to_be_bytes());
-    }
-
-    digest
+    // Final digest
+    hash_value.iter().flat_map(|&word| word.to_be_bytes().to_vec()).collect()
 }
 
 /// Compute SHA-256 digest of a message.
