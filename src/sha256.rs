@@ -45,13 +45,13 @@ fn ch(x: u32, y: u32, z: u32) -> u32 { (x & y) ^ (!x & z) }
 #[inline(always)]
 fn maj(x: u32, y: u32, z: u32) -> u32 { (x & y) ^ (x & z) ^ (y & z) }
 
-const fn sum_0_256(x: u32) -> u32 { rotr::<2>(x) ^ rotr::<13>(x) ^ rotr::<22>(x) }
+const fn csigma0(x: u32) -> u32 { rotr::<2>(x) ^ rotr::<13>(x) ^ rotr::<22>(x) }
 
-const fn sum_1_256(x: u32) -> u32 { rotr::<6>(x) ^ rotr::<11>(x) ^ rotr::<25>(x) }
+const fn csigma1(x: u32) -> u32 { rotr::<6>(x) ^ rotr::<11>(x) ^ rotr::<25>(x) }
 
-const fn delta_0_256(x: u32) -> u32 { rotr::<7>(x) ^ rotr::<18>(x) ^ shr::<3>(x) }
+const fn sigma0(x: u32) -> u32 { rotr::<7>(x) ^ rotr::<18>(x) ^ shr::<3>(x) }
 
-const fn delta_1_256(x: u32) -> u32 { rotr::<17>(x) ^ rotr::<19>(x) ^ shr::<10>(x) }
+const fn sigma1(x: u32) -> u32 { rotr::<17>(x) ^ rotr::<19>(x) ^ shr::<10>(x) }
 
 /// `WORDS_K`, also known as "round constants",  represent the first thirty-two bits of the
 /// fractional parts of the cube roots of the first sixty-four prime numbers.
@@ -173,9 +173,9 @@ fn compute_hash(blocks: &[Vec<u8>]) -> Vec<u8> {
         let mut message_schedule_w = block_to_words(block_m_i);
         // Remaining 48 words
         for index_t in 16..64 {
-            let w_t = delta_1_256(message_schedule_w[index_t - 2])
+            let w_t = sigma1(message_schedule_w[index_t - 2])
                 .wrapping_add(message_schedule_w[index_t - 7])
-                .wrapping_add(delta_0_256(message_schedule_w[index_t - 15]))
+                .wrapping_add(sigma0(message_schedule_w[index_t - 15]))
                 .wrapping_add(message_schedule_w[index_t - 16]);
             message_schedule_w.push(w_t);
         }
@@ -196,11 +196,11 @@ fn compute_hash(blocks: &[Vec<u8>]) -> Vec<u8> {
         let mut temp_2;
         for t in 0..64 {
             temp_1 = h
-                .wrapping_add(sum_1_256(e))
+                .wrapping_add(csigma1(e))
                 .wrapping_add(ch(e, f, g))
                 .wrapping_add(WORDS_K[t])
                 .wrapping_add(message_schedule_w[t]);
-            temp_2 = sum_0_256(a).wrapping_add(maj(a, b, c));
+            temp_2 = csigma0(a).wrapping_add(maj(a, b, c));
             h = g;
             g = f;
             f = e;
