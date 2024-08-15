@@ -64,6 +64,9 @@ Example output:
 bench block_boundary        ... : n == +0.031M, max t = +38.06145, max tau = +0.21517, (5/tau)^2 = 539
 ```
 
+In general, we are interested in analyzing results on stable Rust toolchain compiled in `--release` mode. However,
+we should inspect all results for all compilation targets etc., to make sure nothing stands out.
+
 ### General information:
 
 - `n` is the number of measurements (in millions)
