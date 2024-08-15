@@ -17,6 +17,8 @@
 //! println!("SHA-256 digest: {:x?}", digest);
 //! ```
 
+use subtle::{ConditionallySelectable, ConstantTimeEq};
+
 /// Rotate right (circular right shift) operation.
 ///
 /// See: FIPS 180-4, 3.2
@@ -51,7 +53,7 @@ const fn delta_0_256(x: u32) -> u32 { rotr::<7>(x) ^ rotr::<18>(x) ^ shr::<3>(x)
 
 const fn delta_1_256(x: u32) -> u32 { rotr::<17>(x) ^ rotr::<19>(x) ^ shr::<10>(x) }
 
-/// `WORDS` represent the first thirty-two bits of the fractional parts of the cube roots
+/// `WORDS_K` represent the first thirty-two bits of the fractional parts of the cube roots
 /// of the first sixty-four prime numbers.
 ///
 /// See: FIPS 180-4, 4.2.2
@@ -80,7 +82,12 @@ const WORDS_K: [u32; 64] = [
 fn padding(message: &[u8]) -> Vec<u8> {
     let l_bits = message.len() * 8;
 
-    let mut padded = message.to_vec();
+    // Pre-allocate the maximum possible size to avoid potential timing attacks based on allocation
+    // Maximum padding (512 bits) + 64-bit length
+    let max_padding = 64 + 8;
+    let mut padded = Vec::with_capacity(message.len() + max_padding);
+
+    padded.extend_from_slice(message);
 
     // Append "1" bit to the end of message
     padded.push(0x80);
@@ -89,16 +96,23 @@ fn padding(message: &[u8]) -> Vec<u8> {
     // We want: (l_bits + 1 + k) % 512 = 448
     // So: k = (448 - (l_bits + 1) % 512) % 512
     // But we need to handle the case where l_bits + 1 > 448
-    let k_bits = (512 + 448 - (l_bits + 1) % 512) % 512;
+    let k_bits = {
+        let mut k = 0u32;
+        for i in 0..512u32 {
+            let condition = ((512 + 448 - (l_bits as u32 + 1 + i) % 512) % 512).ct_eq(&0);
+            k = u32::conditional_select(&k, &i, condition);
+        }
+        k
+    };
     let k = k_bits / 8;
 
     // Append k zeros
-    padded.extend(vec![0u8; k]);
+    padded.extend(vec![0u8; k as usize]);
 
     // Append l as a 64-bit big-endian integer
     padded.extend_from_slice(&(l_bits as u64).to_be_bytes());
 
-    assert_eq!(padded.len() % 64, 0);
+    debug_assert_eq!(padded.len() % 64, 0, "Padding did not result in a multiple of 512 bits");
 
     padded
 }
@@ -123,20 +137,16 @@ const IHV: [u32; 8] = [
 ///
 /// A vector of 512-bit blocks.
 fn message_to_blocks(message: &[u8]) -> Vec<Vec<u8>> {
-    let blocks: Vec<Vec<u8>> = message.chunks(64).map(|chunk| chunk.to_vec()).collect();
-    // We only need to check last chunk
-    assert_eq!(blocks.last().map(|b| b.len()).unwrap_or(0), 64);
-    blocks
+    message.chunks_exact(64).map(|chunk| chunk.to_vec()).collect()
 }
 
 /// Divides a 512-bit block into sixteen 32-bit words.
 ///
 /// See: FIPS 180-4, 6.2.2
 fn block_to_words(block: &[u8]) -> Vec<u32> {
-    assert_eq!(block.len() % 4, 0);
     block
-        .chunks(4)
-        .map(|chunk| u32::from_be_bytes([chunk[0], chunk[1], chunk[2], chunk[3]]))
+        .chunks_exact(4)
+        .map(|chunk| u32::from_be_bytes(chunk.try_into().expect("Expected chunks to be 32 bits")))
         .collect()
 }
 

@@ -5,12 +5,15 @@ edition="2021"
 license="MIT"
 
 [dependencies]
+subtle="2.6.1"
 
 [dev-dependencies]
-hex      ="0.4.3"
-regex    ="1.10.6"
-rayon    ="1.10.0"
-criterion="0.5.1"
+hex           ="0.4.3"
+regex         ="1.10.6"
+rayon         ="1.10.0"
+criterion     ="0.5.1"
+rand          ="0.8.5"
+dudect-bencher="0.6.0"
 
 [[bench]]
 name   ="sha256"

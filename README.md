@@ -2,7 +2,7 @@
 
 An educational implementation of Secure Hash Standard in Rust.
 
-Based on [FIPS PUB 180-4](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf).
+Based on [FIPS PUB 180-4](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf). Currently only implements SHA256.
 
 Please don't use this code in production, and so on.
 
@@ -40,6 +40,20 @@ Run all benchmarks and convert into the markdown all in one step
 
 ```bash
 cargo criterion --message-format=json | criterion-table > BENCHMARKS.md
+```
+
+## Constant-time analysis
+
+In order to run a single CT benchmark, run:
+
+```bash
+cargo run --example ctbench_sha256
+```
+
+In order to run CT benchmarks for all compilation targets in debug and release mode, run:
+
+```bash
+bash ./scripts/run_ct_benches.bash 
 ```
 
 # License
