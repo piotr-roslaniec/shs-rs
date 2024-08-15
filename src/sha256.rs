@@ -53,8 +53,8 @@ const fn delta_0_256(x: u32) -> u32 { rotr::<7>(x) ^ rotr::<18>(x) ^ shr::<3>(x)
 
 const fn delta_1_256(x: u32) -> u32 { rotr::<17>(x) ^ rotr::<19>(x) ^ shr::<10>(x) }
 
-/// `WORDS_K` represent the first thirty-two bits of the fractional parts of the cube roots
-/// of the first sixty-four prime numbers.
+/// `WORDS_K`, also known as "round constants",  represent the first thirty-two bits of the
+/// fractional parts of the cube roots of the first sixty-four prime numbers.
 ///
 /// See: FIPS 180-4, 4.2.2
 const WORDS_K: [u32; 64] = [
@@ -292,6 +292,52 @@ mod test {
             assert_eq!(output, expected);
         }
     }
+
+    #[test]
+    fn test_initial_hash_values() {
+        // Checks whether `IHV` vector contains correct values as per FIPS.
+
+        // The first 8 prime numbers
+        let primes: [u32; 8] = [2, 3, 5, 7, 11, 13, 17, 19];
+        let generated_ihv: Vec<u32> = primes
+            .into_iter()
+            .map(|prime| {
+                // Calculate the square root and its fractional part
+                let sqrt_fractional = (prime as f64).sqrt() - (prime as f64).sqrt().floor();
+                // Convert the fractional part to a 32-bit word
+                (sqrt_fractional * (1_u64 << 32) as f64) as u32
+            })
+            .collect();
+        let generated_ihv: [u32; 8] = generated_ihv.try_into().unwrap();
+
+        assert_eq!(IHV, generated_ihv);
+    }
+
+    #[test]
+    fn test_words_k() {
+        // Checks whether `WORDS_K` vector contains correct values as per FIPS.
+
+        // The first 64 prime numbers
+        let primes: [u32; 64] = [
+            2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83,
+            89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179,
+            181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271,
+            277, 281, 283, 293, 307, 311,
+        ];
+        let generated_words_k: Vec<u32> = primes
+            .into_iter()
+            .map(|prime| {
+                // Compute the cube root of the prime and subtract the integer part
+                let cube_root_fractional = (prime as f64).cbrt() - (prime as f64).cbrt().floor();
+                // Convert the fractional part to a 32-bit word
+                (cube_root_fractional * (1_u64 << 32) as f64) as u32
+            })
+            .collect();
+        let generated_words_k: [u32; 64] = generated_words_k.try_into().unwrap();
+
+        assert_eq!(WORDS_K, generated_words_k);
+    }
+
     #[test]
     fn test_sha256() {
         let test_cases = [
