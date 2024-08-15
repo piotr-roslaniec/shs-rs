@@ -140,16 +140,6 @@ fn message_to_blocks(message: &[u8]) -> Vec<Vec<u8>> {
     message.chunks_exact(64).map(|chunk| chunk.to_vec()).collect()
 }
 
-/// Divides a 512-bit block into sixteen 32-bit words.
-///
-/// See: FIPS 180-4, 6.2.2
-fn block_to_words(block: &[u8]) -> Vec<u32> {
-    block
-        .chunks_exact(4)
-        .map(|chunk| u32::from_be_bytes(chunk.try_into().expect("Expected chunks to be 32 bits")))
-        .collect()
-}
-
 /// SHA-256 Hash Computation
 ///
 /// See: FIPS 180-4, 6.2.2
@@ -166,19 +156,27 @@ fn compute_hash(blocks: &[Vec<u8>]) -> Vec<u8> {
     let mut hash_value = IHV;
 
     // Process every message block M_i
-    for block_m_i in blocks.iter() {
+    for block in blocks.iter() {
+        let mut w = [0u32; 64];
+
         // Prepare message schedule
-        // First 16 words
-        let mut message_schedule_w = block_to_words(block_m_i);
-        // Remaining 48 words
-        for index_t in 16..64 {
-            let w_t = sigma1(message_schedule_w[index_t - 2])
-                .wrapping_add(message_schedule_w[index_t - 7])
-                .wrapping_add(sigma0(message_schedule_w[index_t - 15]))
-                .wrapping_add(message_schedule_w[index_t - 16]);
-            message_schedule_w.push(w_t);
+        for t in 0..16 {
+            // Divide a 512-bit block into sixteen 32-bit words
+            // See: FIPS 180-4, 6.2.2
+            w[t] = u32::from_be_bytes([
+                block[4 * t],
+                block[4 * t + 1],
+                block[4 * t + 2],
+                block[4 * t + 3],
+            ]);
         }
-        assert_eq!(message_schedule_w.len(), 64);
+        // Remaining 48 words
+        for t in 16..64 {
+            w[t] = sigma1(w[t - 2])
+                .wrapping_add(w[t - 7])
+                .wrapping_add(sigma0(w[t - 15]))
+                .wrapping_add(w[t - 16]);
+        }
 
         // Hash computation
         let (mut a, mut b, mut c, mut d, mut e, mut f, mut g, mut h) = (
@@ -199,7 +197,7 @@ fn compute_hash(blocks: &[Vec<u8>]) -> Vec<u8> {
                 .wrapping_add(csigma1(e))
                 .wrapping_add(ch(e, f, g))
                 .wrapping_add(WORDS_K[t])
-                .wrapping_add(message_schedule_w[t]);
+                .wrapping_add(w[t]);
             temp_2 = csigma0(a).wrapping_add(maj(a, b, c));
             h = g;
             g = f;
