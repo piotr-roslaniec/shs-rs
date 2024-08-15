@@ -2,20 +2,16 @@ use dudect_bencher::{ctbench_main_with_seeds, BenchRng, Class, CtRunner};
 use rand::Rng;
 use shs_rs::sha256::sha256;
 
+const ITERATIONS: u32 = 20_000;
+
 fn rand_vec(len: usize, rng: &mut BenchRng) -> Vec<u8> {
     let mut arr = vec![0u8; len];
     rng.fill(arr.as_mut_slice());
     arr
 }
 
-fn run_scenario(
-    runner: &mut CtRunner,
-    rng: &mut BenchRng,
-    len_left: usize,
-    len_right: usize,
-    iterations: usize,
-) {
-    for _ in 0..iterations {
+fn run_scenario(runner: &mut CtRunner, rng: &mut BenchRng, len_left: usize, len_right: usize) {
+    for _ in 0..ITERATIONS {
         let left = rand_vec(len_left, rng);
         let right = rand_vec(len_right, rng);
 
@@ -28,20 +24,18 @@ fn run_scenario(
     }
 }
 
-fn block_boundary(runner: &mut CtRunner, rng: &mut BenchRng) {
-    run_scenario(runner, rng, 63, 65, 20_000);
-}
+fn block_boundary(runner: &mut CtRunner, rng: &mut BenchRng) { run_scenario(runner, rng, 63, 65); }
 
 fn padding_extremes(runner: &mut CtRunner, rng: &mut BenchRng) {
-    run_scenario(runner, rng, 55, 56, 20_000);
+    run_scenario(runner, rng, 55, 56);
 }
 
 fn length_extremes(runner: &mut CtRunner, rng: &mut BenchRng) {
-    run_scenario(runner, rng, 1, 1000, 20_000);
+    run_scenario(runner, rng, 1, 1000);
 }
 
 fn single_bit_difference(runner: &mut CtRunner, rng: &mut BenchRng) {
-    for _ in 0..20_000 {
+    for _ in 0..ITERATIONS {
         let left = rand_vec(64, rng);
         let mut right = left.clone();
 
@@ -59,7 +53,7 @@ fn single_bit_difference(runner: &mut CtRunner, rng: &mut BenchRng) {
 }
 
 fn multiple_blocks(runner: &mut CtRunner, rng: &mut BenchRng) {
-    run_scenario(runner, rng, 128, 128, 20_000);
+    run_scenario(runner, rng, 128, 128);
 }
 
 const SEED: Option<u64> = Some(0xdeadbeef);
