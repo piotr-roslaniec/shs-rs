@@ -19,7 +19,7 @@ wget https://www.dlitz.net/crypto/shad256-test-vectors/SHAd256_Test_Vectors.txt 
 Long-running tests are placed in `tests/` directory and mark as `ignore`-d by default. Run them with:
 
 ```bash
-cargo test -- --ignored
+cargo test --release -- --ignored
 ```
 
 You can run regular unit tests with:
@@ -73,7 +73,8 @@ bench block_boundary        ... : n == +0.031M, max t = +38.06145, max tau = +0.
 ```
 
 In general, we are interested in analyzing results on stable Rust toolchain compiled in `--release` mode. However,
-we should inspect all results for all compilation targets etc., to make sure nothing stands out.
+we should inspect all results for all compilation targets etc., to make sure nothing stands out. We should
+also test different `opt-level` settings, but we are skipping this for the sake of brevity.
 
 ### General information:
 
