@@ -211,8 +211,9 @@ ctbench_main_with_seeds!(
     (special_values_ascending, SEED),
     (length_dependent_timing, SEED),
     (intermediate_state_dependency, SEED)
-    // Not available in the reference implementation
-    // (compression_function_test, SEED),
-    // (compression_function_multiple_blocks, SEED),
-    // (compression_function_special_patterns, SEED)
 );
+
+// Not available in the reference implementation
+// (compression_function_test, SEED),
+// (compression_function_multiple_blocks, SEED),
+// (compression_function_special_patterns, SEED)

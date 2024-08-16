@@ -1,35 +1,35 @@
 
 running 15 benches
 bench block_processing_consistency          seeded with 0x00000000deadbeef
-bench block_processing_consistency          ... : n == +0.027M, max t = -215.44130, max tau = -1.30630, (5/tau)^2 = 14
+bench block_processing_consistency          ... : n == +0.067M, max t = -179.77203, max tau = -0.69553, (5/tau)^2 = 51
 bench compression_function_multiple_blocks  seeded with 0x00000000deadbeef
-bench compression_function_multiple_blocks  ... : n == +0.008M, max t = +41.36248, max tau = +0.47733, (5/tau)^2 = 109
+bench compression_function_multiple_blocks  ... : n == +0.003M, max t = +31.90501, max tau = +0.61687, (5/tau)^2 = 65
 bench compression_function_special_patterns seeded with 0x00000000deadbeef
-bench compression_function_special_patterns ... : n == +0.023M, max t = +32.30001, max tau = +0.21528, (5/tau)^2 = 539
+bench compression_function_special_patterns ... : n == +0.120M, max t = +10.60120, max tau = +0.03063, (5/tau)^2 = 26641
 bench compression_function_test             seeded with 0x00000000deadbeef
-bench compression_function_test             ... : n == +0.040M, max t = +73.90716, max tau = +0.37160, (5/tau)^2 = 181
+bench compression_function_test             ... : n == +0.032M, max t = +41.36557, max tau = +0.22977, (5/tau)^2 = 473
 bench intermediate_state_dependency         seeded with 0x00000000deadbeef
-bench intermediate_state_dependency         ... : n == +0.023M, max t = +311.06397, max tau = +2.07013, (5/tau)^2 = 5
+bench intermediate_state_dependency         ... : n == +0.029M, max t = +50.61912, max tau = +0.29584, (5/tau)^2 = 285
 bench length_dependent_timing               seeded with 0x00000000deadbeef
-bench length_dependent_timing               ... : n == +0.000M, max t = -52.20367, max tau = -6.15226, (5/tau)^2 = 0
+bench length_dependent_timing               ... : n == +0.000M, max t = -27.30072, max tau = -3.68123, (5/tau)^2 = 1
 bench length_extremes                       seeded with 0x00000000deadbeef
-bench length_extremes                       ... : n == +0.033M, max t = -1982.02483, max tau = -10.84483, (5/tau)^2 = 0
+bench length_extremes                       ... : n == +0.023M, max t = -2897.34458, max tau = -19.27882, (5/tau)^2 = 0
 bench padding_behavior                      seeded with 0x00000000deadbeef
-bench padding_behavior                      ... : n == +0.023M, max t = -425.55786, max tau = -2.83554, (5/tau)^2 = 3
+bench padding_behavior                      ... : n == +0.023M, max t = -191.50189, max tau = -1.27611, (5/tau)^2 = 15
 bench single_bit_difference                 seeded with 0x00000000deadbeef
-bench single_bit_difference                 ... : n == +0.024M, max t = +32.03220, max tau = +0.20783, (5/tau)^2 = 578
+bench single_bit_difference                 ... : n == +0.035M, max t = +43.32791, max tau = +0.23050, (5/tau)^2 = 470
 bench special_values_all_ones               seeded with 0x00000000deadbeef
-bench special_values_all_ones               ... : n == +0.031M, max t = +45.90408, max tau = +0.26216, (5/tau)^2 = 363
+bench special_values_all_ones               ... : n == +0.035M, max t = +14.18283, max tau = +0.07582, (5/tau)^2 = 4349
 bench special_values_all_zeros              seeded with 0x00000000deadbeef
-bench special_values_all_zeros              ... : n == +0.021M, max t = +20.58068, max tau = +0.14090, (5/tau)^2 = 1259
+bench special_values_all_zeros              ... : n == +0.032M, max t = +4.39411, max tau = +0.02461, (5/tau)^2 = 41272
 bench special_values_alternating_bits       seeded with 0x00000000deadbeef
-bench special_values_alternating_bits       ... : n == +0.024M, max t = +15.75041, max tau = +0.10219, (5/tau)^2 = 2393
+bench special_values_alternating_bits       ... : n == +0.020M, max t = +5.67062, max tau = +0.04010, (5/tau)^2 = 15547
 bench special_values_ascending              seeded with 0x00000000deadbeef
-bench special_values_ascending              ... : n == +0.008M, max t = +41.26798, max tau = +0.47624, (5/tau)^2 = 110
+bench special_values_ascending              ... : n == +0.015M, max t = +3.81759, max tau = +0.03079, (5/tau)^2 = 26377
 bench special_values_high_low_bytes         seeded with 0x00000000deadbeef
-bench special_values_high_low_bytes         ... : n == +0.008M, max t = +58.17040, max tau = +0.67147, (5/tau)^2 = 55
+bench special_values_high_low_bytes         ... : n == +0.036M, max t = +9.47139, max tau = +0.04977, (5/tau)^2 = 10091
 bench special_values_single_one             seeded with 0x00000000deadbeef
-bench special_values_single_one             ... : n == +0.032M, max t = +37.10827, max tau = +0.20786, (5/tau)^2 = 578
+bench special_values_single_one             ... : n == +0.034M, max t = +14.16221, max tau = +0.07698, (5/tau)^2 = 4218
 
 dudect benches complete
 

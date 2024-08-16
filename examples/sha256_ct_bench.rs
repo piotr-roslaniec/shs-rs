@@ -207,8 +207,8 @@ fn compression_function_test(runner: &mut CtRunner, rng: &mut BenchRng) {
 
 fn compression_function_multiple_blocks(runner: &mut CtRunner, rng: &mut BenchRng) {
     for _ in 0..ITERATIONS {
-        let blocks1 = vec![rand_vec(64, rng), rand_vec(64, rng)];
-        let blocks2 = vec![rand_vec(64, rng), rand_vec(64, rng)];
+        let blocks1 = [rand_vec(64, rng), rand_vec(64, rng)];
+        let blocks2 = [rand_vec(64, rng), rand_vec(64, rng)];
 
         runner.run_one(Class::Left, || {
             compute_hash(IHV, &blocks1.iter().map(|b| b.as_slice()).collect::<Vec<_>>());

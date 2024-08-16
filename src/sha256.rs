@@ -17,7 +17,7 @@
 //! println!("SHA-256 digest: {:x?}", digest);
 //! ```
 
-use subtle::{ConditionallySelectable, ConstantTimeEq};
+use subtle::{Choice, ConditionallySelectable};
 
 /// Rotate right (circular right shift) operation.
 ///
@@ -80,39 +80,43 @@ const WORDS_K: [u32; 64] = [
 ///
 /// A padded message ready to be transformed.
 fn padding(message: &[u8]) -> Vec<u8> {
-    let l_bits = message.len() * 8;
-
     // Pre-allocate the maximum possible size to avoid potential timing attacks based on allocation
     // Maximum padding (512 bits) + 64-bit length
+    let l_bits = message.len() * 8;
     let max_padding = 64 + 8;
-    let mut padded = Vec::with_capacity(message.len() + max_padding);
+    let max_len = message.len() + max_padding;
+    let mut padded = vec![0u8; max_len];
 
-    padded.extend_from_slice(message);
+    // Copy message to padded vector in constant time
+    for (i, &byte) in message.iter().enumerate() {
+        padded[i] = byte;
+    }
 
     // Append "1" bit to the end of message
-    padded.push(0x80);
+    padded[message.len()] = 0x80;
 
     // Calculate k bits in constant time
     // We want: (l_bits + 1 + k) % 512 = 448
     // So: k = (448 - (l_bits + 1) % 512) % 512
     // But we need to handle the case where l_bits + 1 > 448
-    let k_bits = {
+    let k = {
         let mut k = 0u32;
         for i in 0..512u32 {
-            let condition = ((512 + 448 - (l_bits as u32 + 1 + i) % 512) % 512).ct_eq(&0);
+            let condition =
+                Choice::from(((448 + 512 - (l_bits as u32 + 1 + i) % 512) % 512 == 0) as u8);
             k = u32::conditional_select(&k, &i, condition);
         }
-        k
+        k / 8
     };
-    let k = k_bits / 8;
 
-    // Append k zeros
-    padded.extend(vec![0u8; k as usize]);
+    // Append length as 64-bit big-endian integer
+    let length_bytes = (l_bits as u64).to_be_bytes();
+    for i in 0..8 {
+        padded[message.len() + (k as usize) + 1 + i] = length_bytes[i];
+    }
 
-    // Append l as a 64-bit big-endian integer
-    padded.extend_from_slice(&(l_bits as u64).to_be_bytes());
-
-    debug_assert_eq!(padded.len() % 64, 0, "Padding did not result in a multiple of 512 bits");
+    // Truncate to the actual padded length
+    padded.truncate(message.len() + (k as usize) + 9);
 
     padded
 }
@@ -194,14 +198,13 @@ pub fn compute_hash(initial_state: [u32; 8], blocks: &[&[u8]]) -> [u8; 32] {
         }
 
         // Compute intermediate hash values
-        hash_value[0] = hash_value[0].wrapping_add(a);
-        hash_value[1] = hash_value[1].wrapping_add(b);
-        hash_value[2] = hash_value[2].wrapping_add(c);
-        hash_value[3] = hash_value[3].wrapping_add(d);
-        hash_value[4] = hash_value[4].wrapping_add(e);
-        hash_value[5] = hash_value[5].wrapping_add(f);
-        hash_value[6] = hash_value[6].wrapping_add(g);
-        hash_value[7] = hash_value[7].wrapping_add(h);
+        hash_value = hash_value
+            .iter()
+            .zip([a, b, c, d, e, f, g, h].iter())
+            .map(|(&x, &y)| x.wrapping_add(y))
+            .collect::<Vec<_>>()
+            .try_into()
+            .unwrap();
     }
 
     // Final digest
