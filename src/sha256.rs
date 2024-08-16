@@ -120,7 +120,7 @@ fn padding(message: &[u8]) -> Vec<u8> {
 /// Initial hash value.
 ///
 /// See: FIPS 180-4, 5.3.3
-const IHV: [u32; 8] = [
+pub const IHV: [u32; 8] = [
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
 ];
 
@@ -135,9 +135,9 @@ const IHV: [u32; 8] = [
 /// # Returns
 ///
 /// A 256-bit digest of `blocks`.
-fn compute_hash(blocks: &[&[u8]]) -> [u8; 32] {
+pub fn compute_hash(initial_state: [u32; 8], blocks: &[&[u8]]) -> [u8; 32] {
     // SHA-256 Preprocessing
-    let mut hash_value = IHV;
+    let mut hash_value = initial_state;
 
     // Process every message block M_i
     for block in blocks.iter() {
@@ -234,7 +234,7 @@ pub fn sha256(message: &[u8]) -> [u8; 32] {
     let padded = padding(message);
     // Divide the message into 512-bit blocks: FIPS 180-4, 5.2.1
     let blocks: Vec<&[u8]> = padded.chunks_exact(64).collect();
-    compute_hash(&blocks)
+    compute_hash(IHV, &blocks)
 }
 
 #[cfg(test)]
