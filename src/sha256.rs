@@ -136,9 +136,7 @@ const IHV: [u32; 8] = [
 /// # Returns
 ///
 /// A vector of 512-bit blocks.
-fn message_to_blocks(message: &[u8]) -> Vec<Vec<u8>> {
-    message.chunks_exact(64).map(|chunk| chunk.to_vec()).collect()
-}
+fn message_to_blocks(message: &[u8]) -> Vec<&[u8]> { message.chunks_exact(64).collect() }
 
 /// SHA-256 Hash Computation
 ///
@@ -151,7 +149,7 @@ fn message_to_blocks(message: &[u8]) -> Vec<Vec<u8>> {
 /// # Returns
 ///
 /// A 256-bit digest of `blocks`.
-fn compute_hash(blocks: &[Vec<u8>]) -> Vec<u8> {
+fn compute_hash(blocks: &[&[u8]]) -> Vec<u8> {
     // SHA-256 Preprocessing
     let mut hash_value = IHV;
 
