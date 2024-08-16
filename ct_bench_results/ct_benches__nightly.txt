@@ -1,15 +1,15 @@
 
 running 5 benches
 bench block_boundary        seeded with 0x00000000deadbeef
-bench block_boundary        ... : n == +0.008M, max t = -6.77746, max tau = -0.07825, (5/tau)^2 = 4082
+bench block_boundary        ... : n == +0.036M, max t = +73.27647, max tau = +0.38811, (5/tau)^2 = 165
 bench length_extremes       seeded with 0x00000000deadbeef
-bench length_extremes       ... : n == +0.034M, max t = -699.22973, max tau = -3.80084, (5/tau)^2 = 1
+bench length_extremes       ... : n == +0.038M, max t = -4605.50855, max tau = -23.51801, (5/tau)^2 = 0
 bench multiple_blocks       seeded with 0x00000000deadbeef
-bench multiple_blocks       ... : n == +0.017M, max t = +32.34943, max tau = +0.24795, (5/tau)^2 = 406
+bench multiple_blocks       ... : n == +0.036M, max t = +62.54972, max tau = +0.32996, (5/tau)^2 = 229
 bench padding_extremes      seeded with 0x00000000deadbeef
-bench padding_extremes      ... : n == +0.035M, max t = -343.91691, max tau = -1.83839, (5/tau)^2 = 7
+bench padding_extremes      ... : n == +0.033M, max t = -1293.38407, max tau = -7.13131, (5/tau)^2 = 0
 bench single_bit_difference seeded with 0x00000000deadbeef
-bench single_bit_difference ... : n == +0.019M, max t = +25.70556, max tau = +0.18866, (5/tau)^2 = 702
+bench single_bit_difference ... : n == +0.039M, max t = +81.99650, max tau = +0.41654, (5/tau)^2 = 144
 
 dudect benches complete
 

@@ -124,20 +124,6 @@ const IHV: [u32; 8] = [
     0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
 ];
 
-/// Divides a padded message into 512-bit blocks.
-///
-/// See: FIPS 180-4, 5.2.1
-///
-///
-/// # Parameters
-///
-/// - `message`: A message to be divided.
-///
-/// # Returns
-///
-/// A vector of 512-bit blocks.
-fn message_to_blocks(message: &[u8]) -> Vec<&[u8]> { message.chunks_exact(64).collect() }
-
 /// SHA-256 Hash Computation
 ///
 /// See: FIPS 180-4, 6.2.2
@@ -149,7 +135,7 @@ fn message_to_blocks(message: &[u8]) -> Vec<&[u8]> { message.chunks_exact(64).co
 /// # Returns
 ///
 /// A 256-bit digest of `blocks`.
-fn compute_hash(blocks: &[&[u8]]) -> Vec<u8> {
+fn compute_hash(blocks: &[&[u8]]) -> [u8; 32] {
     // SHA-256 Preprocessing
     let mut hash_value = IHV;
 
@@ -219,7 +205,11 @@ fn compute_hash(blocks: &[&[u8]]) -> Vec<u8> {
     }
 
     // Final digest
-    hash_value.iter().flat_map(|&word| word.to_be_bytes().to_vec()).collect()
+    let mut result = [0u8; 32];
+    for (i, &word) in hash_value.iter().enumerate() {
+        result[i * 4..(i + 1) * 4].copy_from_slice(&word.to_be_bytes());
+    }
+    result
 }
 
 /// Compute SHA-256 digest of a message.
@@ -240,9 +230,10 @@ fn compute_hash(blocks: &[&[u8]]) -> Vec<u8> {
 /// let digest = sha256(message);
 /// println!("SHA-256 digest: {:x?}", digest);
 /// ```
-pub fn sha256(message: &[u8]) -> Vec<u8> {
+pub fn sha256(message: &[u8]) -> [u8; 32] {
     let padded = padding(message);
-    let blocks = message_to_blocks(&padded);
+    // Divide the message into 512-bit blocks: FIPS 180-4, 5.2.1
+    let blocks: Vec<&[u8]> = padded.chunks_exact(64).collect();
     compute_hash(&blocks)
 }
 
@@ -277,7 +268,7 @@ mod test {
             let output = padding(&input);
             assert_eq!(output.len() % 64, 0);
             assert_eq!(output.len(), expected.len());
-            assert_eq!(output, expected);
+            assert_eq!(output.to_vec(), expected);
         }
     }
 

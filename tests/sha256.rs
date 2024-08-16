@@ -70,9 +70,9 @@ fn sha256_comprehensive_test_vectors() {
             };
 
             let input_len_match = input.len() == test_vec.input_length;
-            let sha256_hash = sha256(&input);
+            let sha256_hash = sha256(&input).to_vec();
             let sha256_match = sha256_hash == test_vec.sha256_hash;
-            let sha_d256_hash = sha256(&sha256_hash);
+            let sha_d256_hash = sha256(&sha256_hash).to_vec();
             let sha_d256_match = sha_d256_hash == test_vec.sha_d256_hash;
 
             (test_vec.identifier.clone(), input_len_match, sha256_match, sha_d256_match)
