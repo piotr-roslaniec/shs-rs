@@ -47,7 +47,7 @@ cargo criterion --message-format=json | criterion-table > BENCHMARKS.md
 In order to run a single CT benchmark, run:
 
 ```bash
-cargo run --example ctbench_sha256
+cargo +stable run --example sha256_ct_bench --release
 ```
 
 In order to run CT benchmarks for all compilation targets in debug and release mode, run:
@@ -56,7 +56,15 @@ In order to run CT benchmarks for all compilation targets in debug and release m
 bash ./scripts/run_ct_benches.bash 
 ```
 
+Check out how a reference implementation, `sha2:Sha256` performs in CT benchmarks:
+
+```bash
+cargo +stable run --example reference_sha256_ct_bench --release
+```
+
 ## Evaluating CT benchmarks
+
+See [`dudect-bencher` docs](https://github.com/rozbb/dudect-bencher/#bencher-output) for more information.
 
 Example output:
 
